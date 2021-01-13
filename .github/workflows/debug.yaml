@@ -45,7 +45,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Set up R (updated)
-        uses: r-lib/actions/setup-r@30e0be01ce01d521431906cf82be954edbc3e51d
+        uses: r-lib/actions/setup-r@master
         with:
           r-version: ${{ matrix.config.r }}
           windows-path-include-mingw: false
@@ -55,7 +55,6 @@ jobs:
         run: |
             rustup target add i686-pc-windows-gnu
             rustup target add x86_64-pc-windows-gnu
-            $env:PATH -split [System.IO.Path]::PathSeparator
         env: 
           RUST_VERSION: ${{ matrix.config.rust-version }}
 
