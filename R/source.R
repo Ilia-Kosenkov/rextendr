@@ -146,22 +146,9 @@ rust_source <- function(file, code = NULL, dependencies = NULL,
 
 
   # load shared library
-  libfilename <- if (.Platform$OS.type == "windows") {
-    libname
-    # paste0(libname, get_dynlib_ext())
-  } else {
-    paste0("lib", libname)
-    # paste0("lib", libname, get_dynlib_ext())
-  }
+  libfilename <- paste0(get_dynlib_name(libname), get_dynlib_ext())
 
-  # generate R bindings for shared library
-  r_path <- file.path(dir, "target", "extendr_wrappers.R")
-  r_raw_lines <- brio::read_lines(r_path)
-  r_raw_lines <- gsub(".Call\\((.*)\\)", sprintf(".Call(\\1, PACKAGE = \"%s\")", libfilename), r_raw_lines)
-  brio::write_lines(r_raw_lines, r_path)
-  source(r_path, local = env)
 
-  libfilename <- paste0(libfilename, get_dynlib_ext())
 
   target_folder <- ifelse(
     is.null(specific_target),
@@ -174,7 +161,20 @@ rust_source <- function(file, code = NULL, dependencies = NULL,
     target_folder,
     ifelse(profile == "dev", "debug", "release"),
     libfilename)
-  dyn.load(shared_lib, local = TRUE, now = TRUE)
+
+  # Capture loaded dll
+  dll_info <- dyn.load(shared_lib, local = TRUE, now = TRUE)
+
+  # generate R bindings for shared library
+  r_path <- file.path(dir, "target", "extendr_wrappers.R")
+  r_raw_lines <- brio::read_lines(r_path)
+  # Inject loaded dll correct name
+  r_raw_lines <- gsub(".Call\\((.*)\\)", sprintf(".Call(\\1, PACKAGE = \"%s\")", dll_info[["name"]]), r_raw_lines)
+  brio::write_lines(r_raw_lines, r_path)
+  source(r_path, local = env)
+
+  # Invisibly returns to fulfill contract
+  invisible(dll_info)
 }
 
 #' @rdname rust_source
@@ -210,6 +210,7 @@ generate_cargo.toml <- function(libname = "rextendr", dependencies = NULL, patch
   cargo.toml
 }
 
+
 get_dynlib_ext <- function() {
   # .Platform$dynlib.ext is not reliable on OS X, so need to work around it
   sysinf <- Sys.info()
@@ -219,6 +220,14 @@ get_dynlib_ext <- function() {
       return(".dylib")
   }
   .Platform$dynlib.ext
+}
+
+get_dynlib_name <- function(libname) {
+  libfilename <- if (.Platform$OS.type == "windows") {
+    libname
+  } else {
+    paste0("lib", libname)
+  }
 }
 
 get_specific_target_name <- function() {
