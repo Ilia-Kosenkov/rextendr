@@ -63,17 +63,10 @@ jobs:
 
       - name: Run tests
         run : |
-          install.packages("remotes")
+          install.packages(c("remotes", "assertthat"))
           remotes::install_local(force = TRUE)
-          library(rextendr)
-          rust_function("fn rust_inc(x : f64) -> f64 { x + 10f64}") -> dll_info
-          print(rust_inc)
-          print(dll_info)
-          getLoadedDLLs()
-          getNativeSymbolInfo("wrap__rust_inc", dll_info[["name"]])
-          .Call("wrap__rust_inc", 5, PACKAGE = dll_info[["name"]])
-          rust_inc(42)
-        shell: Rscript {0}
-          
-          
-          #print(dir(dirname(dll_info[["path"]]), recursive = TRUE))
+          rextendr::rust_function("fn rust_inc(x : f64) -> f64 { x + 10f64}")
+          assertthat::assert_that(rust_inc(42) == 52)
+          rextendr::rust_function("fn rust_inc(x : f64) -> f64 { x + 100f64}")
+          assertthat::assert_that(rust_inc(42) == 142)
+        shell: Rscript {0}          
