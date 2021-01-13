@@ -1,0 +1,79 @@
+name: Debug
+
+on:
+  push:
+    branches:
+      - dll-name
+  workflow_dispatch:
+
+jobs:
+  # All tests under this job are run with pre-computed libR-sys bindings.
+  tests_no_bindgen:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (R-${{ matrix.config.r }} rust-${{ matrix.config.rust-version }})
+            
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: windows-latest, r: 'release', rust-version: 'stable-gnu'}
+
+          - {os: macOS-latest,   r: 'release', rust-version: 'stable'}
+
+          - {os: ubuntu-20.04,   r: 'release', rust-version: 'stable', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+
+
+
+    env:
+      RSPM: ${{ matrix.config.rspm }}
+    
+    # PowerShell core is available on all platforms and can be used to unify scripts
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.config.rust-version }}
+          default: true
+          override: true
+          components: rustfmt, clippy
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v1
+        with:
+          r-version: ${{ matrix.config.r }}
+      
+      - name: Configure Windows
+        if: startsWith(runner.os, 'Windows')
+        run: |
+            rustup target add i686-pc-windows-gnu
+            rustup target add x86_64-pc-windows-gnu
+            $temp = $env:Path -split [System.IO.Path]::PathSeparator | ? {$_ -notlike "*rtools*mingw*"} | join-string -Separator $([System.IO.Path]::PathSeparator)
+            echo $temp | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+        env: 
+          RUST_VERSION: ${{ matrix.config.rust-version }}
+
+
+
+      - name: Run tests
+        run : |
+          install.packages("remotes")
+          remotes::install_local(force = TRUE)
+          library(rextendr)
+          rust_function("fn rust_inc(x : f64) -> f64 { x + 10f64}") -> dll_info
+          print(rust_inc)
+          print(dll_info)
+          getLoadedDLLs()
+          getNativeSymbolInfo("wrap__rust_inc", dll_info[["name"]])
+          .Call("wrap__rust_inc", 5, PACKAGE = dll_info[["name"]])
+          rust_inc(42)
+        shell: Rscript {0}
+          
+          
+          #print(dir(dirname(dll_info[["path"]]), recursive = TRUE))
