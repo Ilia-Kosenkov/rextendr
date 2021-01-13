@@ -45,7 +45,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Set up R (updated)
-        uses: Ilia-Kosenkov/actions/setup-r@master
+        uses: r-lib/actions/setup-r@30e0be01ce01d521431906cf82be954edbc3e51d
         with:
           r-version: ${{ matrix.config.r }}
           windows-path-include-mingw: false
