@@ -44,22 +44,20 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v1
+      - name: Set up R (updated)
+        uses: Ilia-Kosenkov/actions/setup-r@master
         with:
           r-version: ${{ matrix.config.r }}
+          windows-path-include-mingw: false
       
       - name: Configure Windows
         if: startsWith(runner.os, 'Windows')
         run: |
             rustup target add i686-pc-windows-gnu
             rustup target add x86_64-pc-windows-gnu
-            $temp = $env:Path -split [System.IO.Path]::PathSeparator | ? {$_ -notlike "*rtools*mingw*"} | join-string -Separator $([System.IO.Path]::PathSeparator)
-            echo $temp | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+            $env:PATH -split [System.IO.Path]::PathSeparator
         env: 
           RUST_VERSION: ${{ matrix.config.rust-version }}
-
-
 
       - name: Run tests
         run : |
