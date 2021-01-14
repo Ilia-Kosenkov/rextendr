@@ -66,4 +66,6 @@ jobs:
           assertthat::assert_that(rust_inc(42) == 52)
           rextendr::rust_function("fn rust_inc(x : f64) -> f64 { x + 100f64}")
           assertthat::assert_that(rust_inc(42) == 142)
+          rextendr::rust_function("fn rust_empty() {}")
+          assertthat::assert_that(is.null(rust_empty()))
         shell: Rscript {0}          
