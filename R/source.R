@@ -281,6 +281,7 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
   ) %>%
   purrr::map(glue, .envir = rlang::current_env()) %>%
   purrr::flatten_chr()
+  args <- args[nzchar(args)]
 
   result <- callr::run(
     command = cmd,
