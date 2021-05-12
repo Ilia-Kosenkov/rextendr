@@ -277,7 +277,7 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     "--manifest-path={normalizePath(file.path(dir, 'Cargo.toml'))}",
     "--target-dir={normalizePath(file.path(dir, 'target'), mustWork = FALSE)}",
     if (profile == "release") "--release" else "",
-    "--color={ifelse(cli::num_ansi_colors() != 1, 'always', 'none')}"
+    "--color={ifelse(cli::num_ansi_colors() != 1, 'always', 'never')}"
   ) %>%
   purrr::map(glue, .envir = rlang::current_env()) %>%
   purrr::flatten_chr()
@@ -314,7 +314,7 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     )
     ui_throw(
       "Rust code could not be compiled successfully. Aborting.",
-      details <- details,
+      details = details,
       additional_data = list(cargo_errors = cargo_errors)
     )
   }
