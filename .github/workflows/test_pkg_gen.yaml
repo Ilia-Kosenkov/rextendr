@@ -3,6 +3,7 @@ on:
     branches:
       - main
       - master
+      - 'callr-cargo'
   pull_request:
     branches:
       - main
