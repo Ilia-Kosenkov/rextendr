@@ -84,9 +84,14 @@ ui_w <- function(text = "", env = parent.frame()) {
 #'
 #' Creates a styled error message that is then thrown
 #' using [`rlang::abort()`]. Supports {cli} formatting.
-#' @param message The primary error message.
-#' @param details An optional character vector of error detais.
-#' can be formatted with `bullet()`.
+#' @param message \[string\] The primary error message.
+#' @param details \[character(n)\] An optional vector of error details.
+#'   Can be formatted with `bullet()`.
+#' @param additional_data \[list() or `NULL`\] A list of additional objects that
+#'   will be attached to the error object and can be retrieved with e.g. [rlang::last_error()].
+#' @param env \[Environment\] Environment of the callee used in string interpolation.
+#' @param trace \[rlang::rlang_trace\] A trace object created by [rlang::trace_back()].
+#' @param parent \[condition\] Parent condition (useful for error aggregation or in `tryCatch` blocks).
 #' @examples
 #' \dontrun{
 #' ui_throw(
@@ -103,7 +108,12 @@ ui_w <- function(text = "", env = parent.frame()) {
 #' # o Are you sure you did it right?
 #' }
 #' @noRd
-ui_throw <- function(message = "Internal error", details = character(0), env = parent.frame()) {
+ui_throw <- function(message = "Internal error", 
+                     details = character(0), 
+                     additional_data = list(),
+                     env = parent.frame(),
+                     trace = NULL,
+                     parent = NULL) {
   message <- cli_format_text(message, env = env)
 
   if (length(details) != 0L) {
@@ -111,7 +121,13 @@ ui_throw <- function(message = "Internal error", details = character(0), env = p
     message <- glue::glue(message, details, .sep = "\n")
   }
 
-  rlang::abort(message, class = "rextendr_error")
+  rlang::abort(
+    message, 
+    class = "rextendr_error",
+    trace = trace,
+    parent = parent,
+    !!!additional_data
+  )
 }
 
 cli_format_text <- function(message, env = parent.frame()) {
