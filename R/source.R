@@ -115,16 +115,6 @@ rust_source <- function(file, code = NULL,
   # to be used by `system2()` below
   if (!isTRUE(quiet)) {
     ui_i("build directory: {.file {dir}}")
-
-    # `""` sends `cargo` output to R's standard output.
-    # R console displays to the user informaion about compilation steps and
-    # potenatial compilation errors.
-    out <- ""
-  } else {
-
-    # `NULL` or `FALSE` intercepts standard output from `cargo`.
-    # No compilation information is displayed to the user.
-    out <- NULL
   }
 
   # copy rust code into src/lib.rs and determine library name
@@ -167,8 +157,7 @@ rust_source <- function(file, code = NULL,
     specific_target = specific_target,
     dir = dir,
     profile = profile,
-    stdout = out,
-    stderr = out,
+    quiet = quiet,
     use_rtools = use_rtools
   )
 
@@ -226,19 +215,18 @@ rust_function <- function(code, env = parent.frame(), ...) {
 #'   assuming `cargo` is avaialble on the `PATH`.
 #' Function parameters control the formatting of `cargo` arguments.
 #'
-#' @param toolchain \[string\] Rust toolchain used for compilation.
-#' @param specific_target \[string or `NULL`\] Build target (`NULL` if the same as `toolchain`).
-#' @param dir \[string\] Path to a folder containing`Cargo.toml` file.
-#' @param profile \[string\] Indicates wether to build dev or release versions.
+#' @param toolchain \[`string`\] Rust toolchain used for compilation.
+#' @param specific_target \[`string` or `NULL`\] Build target (`NULL` if the same as `toolchain`).
+#' @param dir \[`string`\] Path to a folder containing`Cargo.toml` file.
+#' @param profile \[`string`\] Indicates wether to build dev or release versions.
 #'   If `"release"`, emits `--release` argument to `cargo`.
 #'   Otherwise, does nothing.
-#' @param stdout,stderr \[string or `NULL`\] Controls the standard output and standard error of `cargo`.
-#'   Passed unmodified to [system2()].
-#' @param use_rtools \[logical, windows_only\] Indicates wether path RTools should be appended to `PATH` variable
+#' @param quiet \[`logical`\] Indicates whether compilation output should be displayed or not.
+#' @param use_rtools \[`logical`, windows_only\] Indicates wether path RTools should be appended to `PATH` variable
 #'   for the duration of compilation. Has no effect on systems other than Windows.
 #' @noRd
 invoke_cargo <- function(toolchain, specific_target, dir, profile,
-                         stdout, stderr, use_rtools) {
+                         quiet, use_rtools) {
   # Append rtools path to the end of PATH on Windows
   if (
     isTRUE(use_rtools) &&
@@ -279,7 +267,7 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     withr::local_envvar(RTOOLS40_HOME = rtools_home)
   }
   # Ensures `quiet` is a logical scalar
-  quiet <- FALSE #isTRUE(quiet)
+  quiet <- isTRUE(quiet)
   cmd <- "cargo"
   args <- c(
     "+{toolchain}",
