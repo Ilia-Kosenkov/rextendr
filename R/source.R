@@ -278,21 +278,32 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     # If RTOOLS40_HOME is properly set, this will have no real effect
     withr::local_envvar(RTOOLS40_HOME = rtools_home)
   }
-  status <- system2(
-    command = "cargo",
-    args = c(
-      sprintf("+%s", toolchain),
-      "build",
-      "--lib",
-      if (!is.null(specific_target)) sprintf("--target %s", specific_target) else NULL,
-      sprintf("--manifest-path %s", file.path(dir, "Cargo.toml")),
-      sprintf("--target-dir %s", file.path(dir, "target")),
-      if (profile == "release") "--release" else NULL
-    ),
-    stdout = stdout,
-    stderr = stderr
+  # Ensures `quiet` is a logical scalar
+  quiet <- FALSE #isTRUE(quiet)
+  cmd <- "cargo"
+  args <- c(
+    glue("+{toolchain}"),
+    "build",
+    "--lib",
+    glue("--target={specific_target}"),
+    glue("--manifest-path={file.path(dir, 'Cargo.toml')}"),
+    glue("--target-dir={file.path(dir, 'target')}"),
+    if (profile == "release") "--release" else NULL,
+    glue("--color={ifelse(cli::num_ansi_colors() != 1, 'always', 'none')}")
   )
-  if (status != 0L) {
+
+  result <- callr::run(
+    command = cmd,
+    args = args,
+    windows_verbatim_args = FALSE,
+    stdout = if (quiet) { NULL } else { "" },
+    stderr = "|",
+    error_on_status = FALSE,
+    echo_cmd = !quiet,
+    echo = !quiet
+  )
+
+  if (!isTRUE(result$status == 0L)) {
     ui_throw("Rust code could not be compiled successfully. Aborting.")
   }
 }
