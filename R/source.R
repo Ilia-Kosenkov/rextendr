@@ -189,7 +189,7 @@ rust_source <- function(file, code = NULL,
     package_name = dll_info[["name"]],
     outfile = wrapper_file,
     use_symbols = FALSE,
-    quiet = FALSE
+    quiet = quiet
   )
   source(wrapper_file, local = env)
 
