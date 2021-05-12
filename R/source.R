@@ -282,20 +282,22 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
   quiet <- FALSE #isTRUE(quiet)
   cmd <- "cargo"
   args <- c(
-    glue("+{toolchain}"),
+    "+{toolchain}",
     "build",
     "--lib",
-    glue("--target={specific_target}"),
-    glue("--manifest-path={file.path(dir, 'Cargo.toml')}"),
-    glue("--target-dir={file.path(dir, 'target')}"),
-    if (profile == "release") "--release" else NULL,
-    glue("--color={ifelse(cli::num_ansi_colors() != 1, 'always', 'none')}")
-  )
+    "--target={specific_target}",
+    "--manifest-path={normalizePath(file.path(dir, 'Cargo.toml'))}",
+    "--target-dir={normalizePath(file.path(dir, 'target'), mustWork = FALSE)}",
+    if (profile == "release") "--release" else "",
+    "--color={ifelse(cli::num_ansi_colors() != 1, 'always', 'none')}"
+  ) %>%
+  purrr::map(glue, .envir = rlang::current_env()) %>%
+  purrr::flatten_chr()
 
   result <- callr::run(
     command = cmd,
     args = args,
-    windows_verbatim_args = FALSE,
+    windows_verbatim_args = TRUE,
     stdout = if (quiet) { NULL } else { "" },
     stderr = "|",
     error_on_status = FALSE,
@@ -304,8 +306,47 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
   )
 
   if (!isTRUE(result$status == 0L)) {
-    ui_throw("Rust code could not be compiled successfully. Aborting.")
+    if (!rlang::is_null(result$stderr)) {
+      cargo_errors <- split_cargo_stderr(result$stderr)
+    } else {
+      cargo_errors <- list()
+    }
+    details <- c(
+      if (length(cargo_errors$errors) > 0) {
+        bullet_x("Compilation has produced{cli::qty(cargo_errors$errors)}{?an/} error{?s}.")
+      } else {
+        NULL
+      },
+      if (length(cargo_errors$warnings) > 0) {
+        bullet_w("Compilation has produced{cli::qty(cargo_errors$warnigs)}{?a/} warning{?s}.")
+      } else {
+        NULL
+      },
+      bullet_i("Run {.code summary(rlang::last_error())} to get more details.")
+    )
+    ui_throw(
+      "Rust code could not be compiled successfully. Aborting.",
+      details <- details,
+      additional_data = list(cargo_errors = cargo_errors)
+    )
   }
+}
+
+split_cargo_stderr <- function(stderr) {
+  result <- stderr %>%
+    cli::ansi_strip() %>%
+      paste(sep = "\n") %>%
+      stringi::stri_split_regex(
+        "(?=\n+(?:warning|error):|Updating|Compiling|Finished|To\\ learn\\ more)",
+        omit_empty = TRUE,
+        simplify = TRUE
+      ) %>%
+      stringi::stri_replace_all_regex("^\n+|\n+\\s*$", "")
+
+  list(
+    errors = stringi::stri_subset_regex(result, "^error:"),
+    warnings = stringi::stri_subset_regex(result, "^warning:")
+  )
 }
 
 generate_cargo.toml <- function(libname = "rextendr",

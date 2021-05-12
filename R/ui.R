@@ -186,7 +186,7 @@ summary.rextendr_error <- function(object, ...) {
     #     error1: Compilation failed
     #     error2: File not found
     #     in the folder specified
-    if (!rlang::is_null(err)) {
+    if (!rlang::is_null(err) && !rlang::is_empty(err)) {
       err <- pad_cargo_messages(err)
       cat(cli_format_text(
         "{.code cargo} failed with {.val {cli::no({cli::qty(err)})}} error{?s}{cli::qty(err)}{? /:/:}"
@@ -197,7 +197,7 @@ summary.rextendr_error <- function(object, ...) {
     }
 
     # Warnings are formatted similarly
-    if (!rlang::is_null(wrn)) {
+    if (!rlang::is_null(wrn) && !rlang::is_empty(wrn)) {
       wrn <- pad_cargo_messages(wrn)
       cat(cli_format_text(
         "{.code cargo} emitted {.val {cli::no({cli::qty(wrn)})}} warning{?s}{cli::qty(wrn)}{? /:/:}"
