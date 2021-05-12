@@ -163,7 +163,7 @@ pad_cargo_messages <- function(x, pad = "\t") {
 
 #' Summary output for errors thrown by \pkg{rextendr}.
 #'
-#' Extends [rlang:::summary.rlang_error()] by also printing
+#' Extends [summary.rlang_error()] by also printing
 #'   detailed information about `cargo` errors if such information
 #'   is included in the `condition` passed to `object`.
 #' @param object \[rextendr::rextendr_error\] 
