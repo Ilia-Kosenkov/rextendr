@@ -300,22 +300,8 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     } else {
       cargo_errors <- list()
     }
-    details <- c(
-      if (length(cargo_errors$errors) > 0) {
-        bullet_x("Compilation has produced{cli::qty(cargo_errors$errors)}{?an/} error{?s}.")
-      } else {
-        NULL
-      },
-      if (length(cargo_errors$warnings) > 0) {
-        bullet_w("Compilation has produced{cli::qty(cargo_errors$warnigs)}{?a/} warning{?s}.")
-      } else {
-        NULL
-      },
-      bullet_i("Run {.code summary(rlang::last_error())} to get more details.")
-    )
     ui_throw(
       "Rust code could not be compiled successfully. Aborting.",
-      details = details,
       additional_data = list(cargo_errors = cargo_errors)
     )
   }
