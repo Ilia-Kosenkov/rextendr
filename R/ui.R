@@ -123,7 +123,7 @@ ui_throw <- function(message = "Internal error",
 
   rlang::abort(
     message,
-    class = "rextendr_error",
+    class = c("rextendr_error"),
     trace = trace,
     parent = parent,
     !!!additional_data
@@ -304,43 +304,24 @@ format.rextendr_error <- function(x, ..., backtrace = TRUE, child = NULL,
                                   indent = 2L) {
 
   trim <- !isTRUE(rlang::arg_match(simplify) == "none")
-  rxt_format <- rextendr_error_format_impl(x, trim = trim, ident = ident, ...)
-
-  # We need to trick S3 dispatcher to dispatch all inner calls
-  # using `rlang_error` type rather than `rextendr_error`.
-  # If not done, it enters infinite recursion because {rlang} calls
-  # `conditionMessage`, which resolves to `conditionMessage.rextendr_error`,
-  # which calls `format` which resolves to this method...
-  cls <- class(x)
-  withr::defer(class(x) <- cls)
-
-  # If we temporarily remove all `rextendr_`-prefixed classes from `x`,
-  # it will be processed as `rlang_error` and no infinite recursion will occur.
-  # Doing so offloads all formatting to {rlang} and 
-  # we write only information that we want.
-  class(x) <- stringi::stri_subset_regex(cls, "^rextendr_", negate = TRUE)
-  paste(
-    NextMethod(x),
-    rxt_format,
-    sep = "\n"
+  withr::local_options(
+    rextendr.internal_error_print_options = list(
+      trim = trim,
+      indent = indent
+     )
   )
+  if (rlang::is_null(x[["rlang"]])) {
+    x$rlang <- NULL
+  }
+  NextMethod("format", x)
 }
 
-#' An implementation of generic [`conditionMessage`] method for `rextendr::rextendr_error`.
-#' 
-#' This method is primarily executed when an error of type `rextendr::rextendr_error`
-#'   is thrown and uncaught, and then immediately displayed to the user.
-#'   Other formatting is handled by `rextendr::format.rextendr_error`.
-#' @param c \[`rextendr::rextendr_error`\] Object to format.
-#' @return \[`string`\] Formatted representation of `x`.
-#' @noRd
+
 #' @export
-conditionMessage.rextendr_error <- function(c) {
-  paste(
-    c(
-      NextMethod(c),
-      rextendr_error_format_impl(c)
-    ),
-    collapse = "\n"
-  )
+cnd_header.rextendr_error <- function(cnd, ...) {
+  opts <- getOption("rextendr.internal_error_print_options")
+  trim <- opts$trim %||% TRUE
+  indent <- opts$indent %||% 2L
+
+  paste0("\n", rextendr_error_format_impl(cnd, trim = trim, indent = indent, ...))
 }
