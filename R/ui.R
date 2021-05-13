@@ -150,15 +150,54 @@ cli_format_text <- function(message, env = parent.frame()) {
 #'   in which each occurence of `\n` is suffixed with `pad`.
 #'   An additional `pad` is prefixed to the beginning of each string.
 #' @noRd
-pad_cargo_messages <- function(x, pad = "\t") {
-  paste0(
-    pad,
-    stringi::stri_replace_all_regex(
-      as.character(x),
-      "\n",
-      paste0("\n", pad)
-    )
+prepare_cargo_messages <- function(x, pad = "\t", trim = TRUE, indent = 2L) {
+  if (rlang::is_empty(x)) {
+    return (character(0))
+  }
+
+  result <- purrr::map(
+    glue("{seq_along(x)}. {x}"),
+    stringi::stri_wrap,
+    indent = indent,
+    exdent = 2 * indent
   )
+
+  
+
+  if (isTRUE(trim)) {
+    result <- purrr::flatten_chr(
+      purrr::map_if(
+        result,
+        ~length(.x) > 1L,
+        ~paste0(.x[1], "..."),
+        .else = ~.x[1]
+      )
+    )
+  } else {
+    result <- purrr::map_chr(result, paste, collapse = "\n")
+  }
+
+  result
+}
+
+print.rextendr_error <- function(x, ...,
+                                 simplify = c("branch", "collapse", "none"),
+                                 fields = FALSE,
+                                 indent = 2L,
+                                 trim = TRUE) {
+  simplify <- rlang::arg_match(simplify)
+  cat(
+    format(
+      x,
+      simplify = simplify,
+      fields = fields,
+      indent = indent,
+      trim = trim,
+      ...
+      ), 
+    sep = "\n"
+  )
+  invisible(x)
 }
 
 #' Summary output for errors thrown by \pkg{rextendr}.
@@ -173,38 +212,55 @@ pad_cargo_messages <- function(x, pad = "\t") {
 #' @noRd
 #' @export
 summary.rextendr_error <- function(object, ...) {
-  print(object, simplify = "none", fields = TRUE)
+  print(
+    object,
+    simplify = "none",
+    fields = TRUE,
+    trim = FALSE,
+    indent = 2L,
+    ...
+  )
+}
 
+
+
+format.rextendr_error <- function(x, ..., backtrace = TRUE, child = NULL,
+                                  simplify = c("branch", "collapse", "none"),
+                                  fields = FALSE,
+                                  indent = 2L)
+{
+  base_fmt <- NextMethod(x)
+
+  trim <- isTRUE(rlang::arg_match(simplify) == "none")
+
+  output <- c()
   # `cargo` errors are passed in `$cargo_errors` list,
   # which contains `$errors` and `$warnings`.
-  if (!rlang::is_null(object$cargo_errors)) {
-    cat("\n")
-    err <- object$cargo_errors$errors
-    wrn <- object$cargo_errors$warnings
-
+  if (!rlang::is_null(x$cargo_errors)) {
+    err <- x$cargo_errors$errors
+    wrn <- x$cargo_errors$warnings
     # `cargo` failed with `n` error(s):
     #     error1: Compilation failed
     #     error2: File not found
     #     in the folder specified
     if (!rlang::is_null(err) && !rlang::is_empty(err)) {
-      err <- pad_cargo_messages(err)
-      cat(cli_format_text(
+      err <- prepare_cargo_messages(err, indent = indent, trim = trim)
+      err_header <- bullet_x(
         "{.code cargo} failed with {.val {cli::no({cli::qty(err)})}} error{?s}{cli::qty(err)}{? /:/:}"
         )
-        , sep = "\n"
-      )
-      cat(err, sep = "\n")
+
+      output <- c(output, err_header, err)
     }
 
     # Warnings are formatted similarly
     if (!rlang::is_null(wrn) && !rlang::is_empty(wrn)) {
-      wrn <- pad_cargo_messages(wrn)
-      cat(cli_format_text(
+      wrn <- prepare_cargo_messages(wrn, indent = indent, trim = trim)
+      wrn_header <- bullet_w(
         "{.code cargo} emitted {.val {cli::no({cli::qty(wrn)})}} warning{?s}{cli::qty(wrn)}{? /:/:}"
-        ),
-        sep = "\n"
-      )
-      cat(wrn, sep = "\n")
+        )
+      output <- c(output, wrn_header, wrn)
     }
   }
+
+  paste(base_fmt, "", paste(output, collapse = "\n"), sep = "\n")
 }
