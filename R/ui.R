@@ -331,15 +331,15 @@ format.rextendr_error <- function(x, ..., backtrace = TRUE, child = NULL,
 #' This method is primarily executed when an error of type `rextendr::rextendr_error`
 #'   is thrown and uncaught, and then immediately displayed to the user.
 #'   Other formatting is handled by `rextendr::format.rextendr_error`.
-#' @param x \[`rextendr::rextendr_error`\] Object to format.
+#' @param c \[`rextendr::rextendr_error`\] Object to format.
 #' @return \[`string`\] Formatted representation of `x`.
 #' @noRd
 #' @export
-conditionMessage.rextendr_error <- function(x) {
+conditionMessage.rextendr_error <- function(c) {
   paste(
     c(
-      NextMethod(x),
-      rextendr_error_format_impl(x)
+      NextMethod(c),
+      rextendr_error_format_impl(c)
     ),
     collapse = "\n"
   )
