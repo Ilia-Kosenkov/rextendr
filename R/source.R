@@ -307,6 +307,14 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
   }
 }
 
+#' Parses `stderr` output of `cargo`
+#' 
+#' Detects errors and warnings in the output of `cargo`,
+#'   collects and organizes them into character vectors,
+#'   one error/warning per vector element.
+#' @param stderr \[`character(n)`\] Captured output of `cargo`.
+#' @return \[`list(character(n))`\] A `list` of `errors` and `warnings`.
+#' @noRd
 split_cargo_stderr <- function(stderr) {
   result <- stderr %>%
     cli::ansi_strip() %>%

@@ -87,8 +87,7 @@ ui_w <- function(text = "", env = parent.frame()) {
 #' @param message \[`string`\] The primary error message.
 #' @param details \[`character(n)`\] An optional vector of error details.
 #'   Can be formatted with `bullet()`.
-#' @param additional_data \[`list()` or `NULL`\] A list of additional objects that
-#'   will be attached to the error object and can be retrieved with e.g. [rlang::last_error()].
+#' @param ... Used for error message formatting and is passed to `rlang::abort()`.
 #' @param env \[`environment`\] Environment of the caller used in string interpolation.
 #' @param trace \[`rlang::rlang_trace`\] A trace object created by [rlang::trace_back()].
 #' @param parent \[`condition`\] Parent condition (useful for error aggregation or in `tryCatch` blocks).
