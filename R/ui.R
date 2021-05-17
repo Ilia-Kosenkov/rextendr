@@ -108,18 +108,32 @@ ui_w <- function(text = "", env = parent.frame()) {
 #' # o Are you sure you did it right?
 #' }
 #' @noRd
-ui_throw <- function(message = "Internal error", 
-                     details = character(0), 
-                     additional_data = list(),
+ui_throw <- function(message = "Internal error",
+                     details = character(0),
                      env = parent.frame(),
                      trace = NULL,
-                     parent = NULL) {
+                     parent = NULL,
+                     ...) {
+  additional_data <- rlang::list2(...)
   message <- cli_format_text(message, env = env)
 
   if (length(details) != 0L) {
     details <- glue::glue_collapse(details, sep = "\n")
     message <- glue::glue(message, details, .sep = "\n")
   }
+
+  additional_message <- rextendr_error_format_impl(
+    additional_data,
+    trim = FALSE,
+    indent = 2L
+  )
+  if(
+    !rlang::is_null(additional_message) &&
+    !rlang::is_empty(additional_message)
+  ) {
+    message <- paste(message, additional_message, sep = "\n")
+  }
+
 
   rlang::abort(
     message,
@@ -278,50 +292,3 @@ rextendr_error_format_impl <- function(x, trim = TRUE, indent = 2L, ...) {
   }
 }
 
-#' An implementation of generic [`format`] method for `rextendr::rextendr_error`.
-#'
-#' Implements formatting for `rextendr_error`, offloading formatting of standard fields
-#'   to [`format`] of the base type (which should be `rlang::rlang_error`).
-#' @param x \[`rextendr::rextendr_error\] Object to format.
-#' @param ... For compatibility. Passed to [`format`] of the base type.
-#' @param backtrace \[`logical`\] Controls printing of backtrace.
-#'   Passed to [`format`] of the base type.
-#' @param child \[`?`\] Passed to [`format`] of the base type.
-#' @param simplify \[`"branch"`|`"collapse"`|`"none"`\] Wether to simplify the output.
-#'   If `simplify = "none"`, no trimming is performed for `rextendr_error` fields.
-#'   Passed to [`format`] of the base type.
-#' @param fields \[`logical(1)`\] Controls formatting of fields.
-#'   Passed to [`format`] of the base type.
-#' @param indent \[`integer(1)`\] How much the error messages (e.g., from `cargo`),
-#'   should be indented.
-#'   Passed to `rextendr:::prepate_cargo_messages()`.
-#' @return \[`string`\] Formatted representation of `x`.
-#' @noRd
-#' @export
-format.rextendr_error <- function(x, ..., backtrace = TRUE, child = NULL,
-                                  simplify = c("branch", "collapse", "none"),
-                                  fields = FALSE,
-                                  indent = 2L) {
-
-  trim <- !isTRUE(rlang::arg_match(simplify) == "none")
-  withr::local_options(
-    rextendr.internal_error_print_options = list(
-      trim = trim,
-      indent = indent
-     )
-  )
-  if (rlang::is_null(x[["rlang"]])) {
-    x$rlang <- NULL
-  }
-  NextMethod("format", x)
-}
-
-
-#' @export
-cnd_header.rextendr_error <- function(cnd, ...) {
-  opts <- getOption("rextendr.internal_error_print_options")
-  trim <- opts$trim %||% TRUE
-  indent <- opts$indent %||% 2L
-
-  paste0("\n", rextendr_error_format_impl(cnd, trim = trim, indent = indent, ...))
-}

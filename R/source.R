@@ -302,7 +302,7 @@ invoke_cargo <- function(toolchain, specific_target, dir, profile,
     }
     ui_throw(
       "Rust code could not be compiled successfully. Aborting.",
-      additional_data = list(cargo_errors = cargo_errors)
+      cargo_errors = cargo_errors
     )
   }
 }
