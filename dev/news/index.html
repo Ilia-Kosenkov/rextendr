@@ -42,6 +42,9 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rextendr-development-version">rextendr (development version)<a class="anchor" aria-label="anchor" href="#rextendr-development-version"></a></h2>
 <ul><li>
+<code>Makevars</code> now prints linked static libraries at compile time <a href="https://github.com/extendr/rextendr/pull/393" class="external-link uri">https://github.com/extendr/rextendr/pull/393</a>
+</li>
+<li>
 <code><a href="../reference/use_extendr.html">use_extendr()</a></code> sets the <code>DESCRIPTION</code>’s <code>SystemRequirements</code> field according to CRAN policy to <code>Cargo (Rust's package manager), rustc</code> (<a href="https://github.com/extendr/rextendr/issues/329" class="external-link">#329</a>)</li>
 <li>Introduces new functions <code><a href="../reference/cran.html">use_cran_defaults()</a></code> and <code><a href="../reference/cran.html">vendor_pkgs()</a></code> to ease the publication of extendr-powered packages on CRAN. See the new article <em>CRAN compliant extendr packages</em> on how to use these (<a href="https://github.com/extendr/rextendr/issues/320" class="external-link">#320</a>).</li>
 <li>
@@ -64,6 +67,7 @@
 <li>
 <code><a href="../reference/cran.html">use_cran_defaults()</a></code> now checks the <code>SystemRequirements</code> field in the <code>DESCRIPTION</code> file for cargo and rustc. It will display installation instructions if either is missing or provide the minimum required version if the installed version is outdated.</li>
 <li>Added <code><a href="../reference/use_msrv.html">use_msrv()</a></code> to aid in specifying the minimum supported rust version (MSRV) for an R package</li>
+<li>Added <code><a href="../reference/read_cargo_metadata.html">read_cargo_metadata()</a></code> to retrieve Cargo metadata for packages and workspaces. (<a href="https://github.com/extendr/rextendr/issues/389" class="external-link">#389</a>)</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="rextendr-030">rextendr 0.3.0<a class="anchor" aria-label="anchor" href="#rextendr-030"></a></h2><p class="text-muted">CRAN release: 2023-05-30</p>
