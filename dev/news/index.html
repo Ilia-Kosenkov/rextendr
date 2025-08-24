@@ -40,7 +40,12 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rextendr-development-version">rextendr (development version)<a class="anchor" aria-label="anchor" href="#rextendr-development-version"></a></h2>
-<ul><li>Fixes compatibility with WebR by adding <code>CARGO_PROFILE_DEV_PANIC="abort" CARGO_PROFILE_RELEASE_PANIC="abort"</code> when targeting <code>wasm32-unknown-emsacripten</code> target <a href="https://github.com/extendr/rextendr/pull/461" class="external-link uri">https://github.com/extendr/rextendr/pull/461</a>
+<ul><li>Sets the <code>extendr-api</code> version to the latest stable version instead of <code>"*"</code> when creating a new package. This is fetched from <a href="https://crates.io/api/v1/crates/extendr-api" class="external-link uri">https://crates.io/api/v1/crates/extendr-api</a> and will fall back to <code>"*"</code> if not available <a href="https://github.com/extendr/rextendr/pull/467" class="external-link uri">https://github.com/extendr/rextendr/pull/467</a>
+</li>
+<li>Adds <code>xz</code> to <code>SystemRequirements</code> to ensure extendr based packages build on Posit Package Manager <a href="https://github.com/extendr/rextendr/pull/467" class="external-link uri">https://github.com/extendr/rextendr/pull/467</a>
+</li>
+<li>Sets the release profile to use <code>lto=true</code> and <code>codegen-units=1</code> to ensure compatible builds with WebR as well as reduce the overall compiled package size <a href="https://github.com/extendr/rextendr/pull/465" class="external-link uri">https://github.com/extendr/rextendr/pull/465</a>.</li>
+<li>Fixes compatibility with WebR by adding <code>CARGO_PROFILE_DEV_PANIC="abort" CARGO_PROFILE_RELEASE_PANIC="abort"</code> when targeting <code>wasm32-unknown-emsacripten</code> target <a href="https://github.com/extendr/rextendr/pull/461" class="external-link uri">https://github.com/extendr/rextendr/pull/461</a>
 </li>
 </ul></div>
     <div class="section level2">
@@ -54,6 +59,9 @@
 <ul><li>Note that not all Rust crates are wasm compatible. This change only enables the package to build in the <code>wasm32-unknown-emscripten</code> target. It does not guarantee all dependencies will compile.</li>
 </ul></li>
 <li>Addresses new CRAN check in R 4.5+ adding warning for <code>_abort</code> usage</li>
+<li>
+<code><a href="../reference/use_extendr_badge.html">use_extendr_badge()</a></code> has been added to add an extendr-specific badge to a <code>README.Rmd</code> via <code><a href="https://usethis.r-lib.org/reference/badges.html" class="external-link">usethis::use_badge()</a></code> <a href="https://github.com/extendr/rextendr/pull/417" class="external-link uri">https://github.com/extendr/rextendr/pull/417</a>
+</li>
 <li>Removes <code>Makevars.ucrt</code> as R versions &lt; 4.1 are not supported by extendr <a href="https://github.com/extendr/rextendr/pull/414" class="external-link uri">https://github.com/extendr/rextendr/pull/414</a>
 </li>
 <li>
